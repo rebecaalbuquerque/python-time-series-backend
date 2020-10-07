@@ -1,0 +1,64 @@
+{
+"lista": [
+{
+ "tipoSerie": "sazonal",
+ "qtdGerados": 2,
+ "n": 100,
+ "s": 7,
+ "diasDsazonalidade": 1,
+ "picoMax": 40,
+ "picoMin": 15,
+ "baixoMax": 10,
+ "baixoMin": 5
+},
+{
+ "tipoSerie": "elasticidade",
+ "qtdGerados": 2,
+ "n": 100,
+ "duracaoVenda": 33,
+ "variacao": 5,
+ "pMin": 10,
+ "pMax": 20,
+ "vMin": 20,
+ "vMax": 200,
+ "aleatoriedadeDiaria": 4
+},
+{
+ "tipoSerie": "dependencia",
+ "qtdGerados": 1,
+ "minV": 50,
+ "maxV": 100,
+ "correlacao": 40,
+ "tipoInicial": "elasticidade",
+ "tipoDependencia": "negativo",
+ "n": 100,
+ "variacaoDiaria": 15,
+ "elasticidade": {
+ "duracaoVenda": 33,
+ "variacao": 5,
+ "pMin": 10,
+ "pMax": 20,
+ "vMin": 20,
+ "vMax": 200,
+ "aleatoriedadeDiaria": 4}
+},
+{
+ "tipoSerie": "dependencia",
+ "qtdGerados": 1,
+ "minV": 50,
+ "maxV": 100,
+ "correlacao": 40,
+ "tipoInicial": "sazonal",
+ "tipoDependencia": "negativo",
+ "n": 100,
+ "variacaoDiaria": 15,
+ "sazonal": {
+ "s": 7,
+ "diasDsazonalidade": 1,
+ "picoMax": 40,
+ "picoMin": 15,
+ "baixoMax": 10,
+ "baixoMin": 5}
+}
+]
+}

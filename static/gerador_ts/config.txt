@@ -1,0 +1,26 @@
+{
+"lista": [
+{
+ "tipoSerie": "sazonal",
+ "qtdGerados": 1,
+ "n": 100,
+ "s": 7,
+ "diasDsazonalidade": 1,
+ "picoMax": 40,
+ "picoMin": 15,
+ "baixoMax": 10,
+ "baixoMin": 5
+},
+{
+ "tipoSerie": "sazonal",
+ "qtdGerados": 1,
+ "n": 50,
+ "s": 7,
+ "diasDsazonalidade": 1,
+ "picoMax": 40,
+ "picoMin": 15,
+ "baixoMax": 10,
+ "baixoMin": 5
+}
+]
+}
