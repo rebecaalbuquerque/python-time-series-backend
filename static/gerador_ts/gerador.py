@@ -1,10 +1,14 @@
 import json
+import os
+import shutil
 from glob import glob
 from random import randint
 from random import uniform
 
 import matplotlib.pyplot as plt
 import pandas as pd
+
+from static.gerador_ts.constants import PATH_SERIES_TEMPORAIS_SINTETICAS
 
 
 def _mean(l):
@@ -206,6 +210,17 @@ def elasticidade(n, porcentagem, pMin, pMax, vMin, vMax, aleatoriedadeDiaria, du
 
 
 def gerar():
+
+    for filename in os.listdir(PATH_SERIES_TEMPORAIS_SINTETICAS):
+        file_path = os.path.join(PATH_SERIES_TEMPORAIS_SINTETICAS, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
     with open('static/gerador_ts/config.txt') as json_file:
         item = json.load(json_file)
 
@@ -228,10 +243,10 @@ def gerar():
 
                 plt.plot(range(len(vendas_sazonais)), vendas_sazonais)
                 plt.title("Sazonal ")
-                plt.savefig('static/gerador_ts/arquivos/sazonal' + str(i) + '.png')
+                plt.savefig(PATH_SERIES_TEMPORAIS_SINTETICAS + '/sazonal' + str(i) + '.png')
                 # plt.show()
                 plt.close()
-                pd.DataFrame(dic).to_csv('static/gerador_ts/arquivos/sazonal' + str(i) + '.csv', index=False)
+                pd.DataFrame(dic).to_csv(PATH_SERIES_TEMPORAIS_SINTETICAS + '/sazonal' + str(i) + '.csv', index=False)
 
         elif item['tipoSerie'] == "elasticidade":
             dic = {}
@@ -256,8 +271,8 @@ def gerar():
 
                 dic.update({'venda-' + str(i): vendas, 'preco-' + str(i): precos})
 
-            files = glob('static/gerador_ts/arquivos/elasticidade*')
-            pd.DataFrame(dic).to_csv('static/gerador_ts/arquivos/elasticidade' + str(len(files)) + '.csv', index=False)
+            files = glob(PATH_SERIES_TEMPORAIS_SINTETICAS + '/elasticidade*')
+            pd.DataFrame(dic).to_csv(PATH_SERIES_TEMPORAIS_SINTETICAS + '/elasticidade' + str(len(files)) + '.csv', index=False)
 
         elif item['tipoSerie'] == "dependencia":
             dic = {}
@@ -267,5 +282,5 @@ def gerar():
                 dic.update({'venda-item-Dep-' + str(i): vendaDep, 'venda-item-anterior-' + str(i): vendaDep,
                             'preco-item-anterior-' + str(i): precoE})
 
-            files = glob('static/gerador_ts/arquivos/dependencia*')
-            pd.DataFrame(dic).to_csv('static/gerador_ts/arquivos/dependencia' + str(len(files)) + '.csv', index=False)
+            files = glob(PATH_SERIES_TEMPORAIS_SINTETICAS + '/dependencia*')
+            pd.DataFrame(dic).to_csv(PATH_SERIES_TEMPORAIS_SINTETICAS + '/dependencia' + str(len(files)) + '.csv', index=False)
