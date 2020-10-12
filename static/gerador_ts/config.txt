@@ -2,7 +2,7 @@
 "lista": [
 {
  "tipoSerie": "sazonal",
- "qtdGerados": 1,
+ "qtdGerados": 10,
  "n": 100,
  "s": 7,
  "diasDsazonalidade": 1,

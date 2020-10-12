@@ -1,4 +1,6 @@
 import base64
+import os
+import shutil
 from itertools import groupby
 from os import listdir
 from os.path import isfile, join
@@ -34,3 +36,15 @@ def lista_arquivos_do_diretorio(path):
         result.append(d)
 
     return result
+
+
+def limpar_diretorio(path):
+    for filename in os.listdir(path):
+        file_path = os.path.join(path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))

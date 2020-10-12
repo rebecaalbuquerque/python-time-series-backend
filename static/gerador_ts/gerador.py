@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from static.gerador_ts.constants import PATH_SERIES_TEMPORAIS_SINTETICAS
+from static.gerador_ts.utils import limpar_diretorio
 
 
 def _mean(l):
@@ -211,15 +212,7 @@ def elasticidade(n, porcentagem, pMin, pMax, vMin, vMax, aleatoriedadeDiaria, du
 
 def gerar():
 
-    for filename in os.listdir(PATH_SERIES_TEMPORAIS_SINTETICAS):
-        file_path = os.path.join(PATH_SERIES_TEMPORAIS_SINTETICAS, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
+    limpar_diretorio(PATH_SERIES_TEMPORAIS_SINTETICAS)
 
     with open('static/gerador_ts/config.txt') as json_file:
         item = json.load(json_file)
