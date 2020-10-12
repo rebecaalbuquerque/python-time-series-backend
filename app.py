@@ -1,22 +1,42 @@
-from io import StringIO
-import pandas as pd
-from flask import Flask, jsonify, request
-from flask_cors import CORS
 import base64
+from io import StringIO
+
+import pandas as pd
+from flask import Flask, jsonify, request, url_for, render_template
+from flask_cors import CORS
 
 from constants import PATH_SERIES_TEMPORAIS_SINTETICAS
 from gerador import gerar
 from metricas import gerar_metricas_e_plot_predicoes
 from utils import arquivo_para_base64, lista_arquivos_do_diretorio
-import pathlib
-
 
 app = Flask(__name__)
 CORS(app)
 
 
+@app.route("/", methods=["GET"])
+def root():
+    links = []
+
+    for rule in app.url_map.iter_rules():
+        if "static" not in rule.endpoint and "root" not in rule.endpoint:
+
+            for method in rule.methods:
+
+                if method != "OPTIONS" and method != "HEAD":
+
+                    if method != "GET":
+                        url = "/"
+                    else:
+                        url = url_for(rule.endpoint, **(rule.defaults or {}))
+
+                    links.append((url, "[" + method + "]  " + rule.endpoint))
+
+    return render_template("all_links.html", links=links)
+
+
 @app.route('/seriesTemporaisSinteticas', methods=["GET"])
-def gerar_series_temporais():
+def gerar_series_temporais_sinteticas():
 
     gerar()
 
