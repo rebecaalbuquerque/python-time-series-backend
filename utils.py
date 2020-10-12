@@ -18,7 +18,6 @@ def lista_arquivos_do_diretorio(path):
     result = []
 
     for file in arquivos_no_diretorio:
-        print("file >> " + file)
         arquivos_com_path.append(
             {
                 "nome": file.split(".")[0],
@@ -37,6 +36,7 @@ def lista_arquivos_do_diretorio(path):
 
         result.append(d)
 
+    print(result)
     return result
 
 
