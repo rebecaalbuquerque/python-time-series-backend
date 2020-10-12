@@ -43,6 +43,7 @@ def lista_arquivos_do_diretorio(path):
 def limpar_diretorio(path):
 
     if os_path.exists(path):
+        print("limpar_diretorio >> true")
 
         for filename in os.listdir(path):
             file_path = os.path.join(path, filename)
@@ -53,3 +54,5 @@ def limpar_diretorio(path):
                     shutil.rmtree(file_path)
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
+    else:
+        print("limpar_diretorio >> false")
