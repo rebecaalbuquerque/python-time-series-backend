@@ -8,6 +8,8 @@ from constants import PATH_SERIES_TEMPORAIS_SINTETICAS
 from gerador import gerar
 from metricas import gerar_metricas_e_plot_predicoes
 from utils import arquivo_para_base64, lista_arquivos_do_diretorio
+import pathlib
+
 
 app = Flask(__name__)
 CORS(app)
@@ -15,6 +17,7 @@ CORS(app)
 
 @app.route('/seriesTemporaisSinteticas', methods=["GET"])
 def gerar_series_temporais():
+    print(pathlib.Path(__file__).parent.absolute())
     gerar()
 
     response = []
