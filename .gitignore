@@ -136,7 +136,3 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-
-static/gerador_ts/tsSinteticas
-static/gerador_ts/metricas
-
