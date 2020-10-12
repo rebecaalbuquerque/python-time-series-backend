@@ -17,12 +17,13 @@ CORS(app)
 
 @app.route('/seriesTemporaisSinteticas', methods=["GET"])
 def gerar_series_temporais():
-    print(pathlib.Path(__file__).parent.absolute())
+
     gerar()
 
     response = []
 
     for arquivo in lista_arquivos_do_diretorio(PATH_SERIES_TEMPORAIS_SINTETICAS):
+        print(arquivo)
         ts = {
             "nome": arquivo["nome"],
             "csv": arquivo_para_base64(arquivo["csv"]),
