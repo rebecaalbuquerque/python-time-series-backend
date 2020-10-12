@@ -1,3 +1,7 @@
+import matplotlib
+
+matplotlib.use('Agg')
+
 import json
 from glob import glob
 from random import randint
@@ -117,7 +121,7 @@ def dependencia(data):
     for i in range(n):
         if tipoInicial == "sazonal":
             vendas[i] = (vendas[i] * (correlacao / 100)) + (
-                        (vendas_puras[i] * (mediaV / mediaVP)) * (abs(correlacao - 100) / 100))
+                    (vendas_puras[i] * (mediaV / mediaVP)) * (abs(correlacao - 100) / 100))
         else:
             vendas[i] = (vendas[i] * (correlacao / 100)) + (vendas_puras[i] * (abs(correlacao - 100) / 100))
 
@@ -263,7 +267,8 @@ def gerar():
                 dic.update({'venda-' + str(i): vendas, 'preco-' + str(i): precos})
 
             files = glob(PATH_SERIES_TEMPORAIS_SINTETICAS + '/elasticidade*')
-            pd.DataFrame(dic).to_csv(PATH_SERIES_TEMPORAIS_SINTETICAS + '/elasticidade' + str(len(files)) + '.csv', index=False)
+            pd.DataFrame(dic).to_csv(PATH_SERIES_TEMPORAIS_SINTETICAS + '/elasticidade' + str(len(files)) + '.csv',
+                                     index=False)
 
         elif item['tipoSerie'] == "dependencia":
             dic = {}
@@ -274,4 +279,5 @@ def gerar():
                             'preco-item-anterior-' + str(i): precoE})
 
             files = glob(PATH_SERIES_TEMPORAIS_SINTETICAS + '/dependencia*')
-            pd.DataFrame(dic).to_csv(PATH_SERIES_TEMPORAIS_SINTETICAS + '/dependencia' + str(len(files)) + '.csv', index=False)
+            pd.DataFrame(dic).to_csv(PATH_SERIES_TEMPORAIS_SINTETICAS + '/dependencia' + str(len(files)) + '.csv',
+                                     index=False)
