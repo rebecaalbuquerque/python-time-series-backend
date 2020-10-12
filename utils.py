@@ -14,27 +14,18 @@ def arquivo_para_base64(path):
 
 def lista_arquivos_do_diretorio(path):
     arquivos_no_diretorio = [f for f in listdir(path) if isfile(join(path, f))]
-    arquivos_com_path = []
     result = []
 
-    for file in arquivos_no_diretorio:
-        arquivos_com_path.append(
+    for index in range(0, len(arquivos_no_diretorio), 2):
+        file_name = arquivos_no_diretorio[index].split(".")[0]
+
+        result.append(
             {
-                "nome": file.split(".")[0],
-                "path": path + "/" + file
+                "nome": file_name,
+                "csv": path + "/" + file_name + ".csv",
+                "imagem": path + "/" + file_name + ".png"
             }
         )
-
-    for k, v in groupby(arquivos_com_path, key=lambda x: x['nome']):
-        d = {"nome": k}
-
-        for p in [d['path'] for d in list(v)]:
-            if p.endswith(".csv"):
-                d["csv"] = p
-            else:
-                d["imagem"] = p
-
-        result.append(d)
 
     print(result)
     return result
