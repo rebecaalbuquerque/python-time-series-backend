@@ -1,6 +1,4 @@
 import json
-import os
-import shutil
 from glob import glob
 from random import randint
 from random import uniform
@@ -8,8 +6,8 @@ from random import uniform
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from static.gerador_ts.constants import PATH_SERIES_TEMPORAIS_SINTETICAS
-from static.gerador_ts.utils import limpar_diretorio
+from constants import PATH_SERIES_TEMPORAIS_SINTETICAS
+from utils import limpar_diretorio
 
 
 def _mean(l):
@@ -214,7 +212,7 @@ def gerar():
 
     limpar_diretorio(PATH_SERIES_TEMPORAIS_SINTETICAS)
 
-    with open('static/gerador_ts/config.txt') as json_file:
+    with open('config.txt') as json_file:
         item = json.load(json_file)
 
     for item in item['lista']:

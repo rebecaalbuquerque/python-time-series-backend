@@ -4,10 +4,10 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import base64
 
-from static.gerador_ts.constants import PATH_SERIES_TEMPORAIS_SINTETICAS
-from static.gerador_ts.gerador import gerar
-from static.gerador_ts.metricas import gerar_metricas_e_plot_predicoes
-from static.gerador_ts.utils import arquivo_para_base64, lista_arquivos_do_diretorio
+from constants import PATH_SERIES_TEMPORAIS_SINTETICAS
+from gerador import gerar
+from metricas import gerar_metricas_e_plot_predicoes
+from utils import arquivo_para_base64, lista_arquivos_do_diretorio
 
 app = Flask(__name__)
 CORS(app)

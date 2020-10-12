@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from static.gerador_ts.constants import PATH_METRICAS
+from constants import PATH_METRICAS
 
 
 # obsercacoes e predicoes são pd.Series
-from static.gerador_ts.utils import arquivo_para_base64, limpar_diretorio
+from utils import arquivo_para_base64, limpar_diretorio
 
 
 def gerar_metricas_e_plot_predicoes(nome_serie_temporal, df_observacoes, df_predicoes):
