@@ -70,15 +70,14 @@ def gerar_metricas():
         df_predicoes = pd.read_csv(StringIO(str(csv_predicoes_64_decode, 'utf-8')))
 
         metricas_e_plot = gerar_metricas_e_plot_predicoes(
-            "Série " + str(index) + "(" + item["nomeModelo"] + ")",
+            item["dadosReaisArquivo"].replace(".csv", "") + " " + str(index) + "(" + item["nomeModelo"] + ")",
             df_dados_reais,
             df_predicoes
         )
 
         response.append(
             {
-                "nome": "Série " + str(index),
-                "modelo": item["nomeModelo"],
+                "nome": item["dadosReaisArquivo"].replace(".csv", "") + " (" + item["nomeModelo"] + ")",
                 "imagem": metricas_e_plot["imagem"],
                 "metricas": metricas_e_plot["metricas"]
             }
