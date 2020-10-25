@@ -1,7 +1,6 @@
 import base64
 import os
 import shutil
-from itertools import groupby
 from os import listdir
 from os import path as os_path
 from os.path import isfile, join

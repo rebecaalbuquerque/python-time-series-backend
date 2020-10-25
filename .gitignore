@@ -144,3 +144,7 @@ static/gerador_ts/metricas/*.csv
 static/gerador_ts/tsSinteticas/*.png
 static/gerador_ts/tsSinteticas/*.csv
 !static/gerador_ts/tsSinteticas/.keep
+
+static/gerador_ts/metricasFiltradas/*.png
+static/gerador_ts/metricasFiltradas/*.csv
+!static/gerador_ts/metricasFiltradas/.keep
