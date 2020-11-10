@@ -238,7 +238,7 @@ def gerar():
 
                 plt.plot(range(len(vendas_sazonais)), vendas_sazonais)
                 plt.title("Sazonal ")
-                plt.savefig(PATH_SERIES_TEMPORAIS_SINTETICAS + '/sazonal' + str(i) + '.png')
+                plt.savefig(PATH_SERIES_TEMPORAIS_SINTETICAS + '/sazonal' + str(i) + '.png', bbox_inches='tight')
                 # plt.show()
                 plt.close()
                 pd.DataFrame(dic).to_csv(PATH_SERIES_TEMPORAIS_SINTETICAS + '/sazonal' + str(i) + '.csv', index=False)

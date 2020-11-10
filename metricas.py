@@ -6,147 +6,176 @@ import numpy as np
 import pandas as pd
 import sklearn.metrics as metrics
 
-from constants import PATH_METRICAS, PATH_METRICAS_FILTRADAS
-from utils import arquivo_para_base64, limpar_diretorio
+from constants import PATH_METRICAS, PATH_METRICAS_FILTRADAS, NOME_COLUNA_INDEX, NOME_COLUNA_VALOR, \
+    NOME_COLUNA_CATEGORIA, NOME_COLUNA_ITEM
+from utils import arquivo_para_base64
+
+"""
+    df_observacoes = df com N series temporais
+    df_predicoes = df com predicoes das N series temporais
+"""
 
 
-def gerar_metricas_e_plot_predicoes(nome_serie_temporal, df_observacoes, df_predicoes):
+def gerar_metricas_e_plot_predicoes(nome_modelo, df_observacoes, df_predicoes):
     # limpar_diretorio(PATH_METRICAS)
 
-    # Setando index dos DataFrames como um DateTime
-    # df_observacoes[df_observacoes.columns[0]] = pd.to_datetime(df_observacoes[df_observacoes.columns[0]])
-    # df_predicoes[df_predicoes.columns[0]] = pd.to_datetime(df_predicoes[df_predicoes.columns[0]])
+    df_predicoes.to_csv(PATH_METRICAS + '/' + nome_modelo + '@predicoes.csv', index=False)
 
-    df_observacoes.to_csv(PATH_METRICAS + '/' + nome_serie_temporal + '@dadosReais.csv', index=False)
-    df_predicoes.to_csv(PATH_METRICAS + '/' + nome_serie_temporal + '@predicoes.csv', index=False)
+    quantidade_series = df_observacoes.shape[0] / df_observacoes[NOME_COLUNA_INDEX].unique().size
+
+    array_df_observacoes = np.array_split(df_observacoes, quantidade_series)
+    array_df_predicoes = np.array_split(df_predicoes, quantidade_series)
+
+    df_observacoes_soma = _somar_dataframes(NOME_COLUNA_INDEX, NOME_COLUNA_VALOR, array_df_observacoes)
+    df_predicoes_soma = _somar_dataframes(NOME_COLUNA_INDEX, NOME_COLUNA_VALOR, array_df_predicoes)
 
     # Criando Series a partir dos DataFrames
-    observacoes = pd.Series(df_observacoes[df_observacoes.columns[1]].values)
+    observacoes = pd.Series(df_observacoes_soma[NOME_COLUNA_VALOR].values)
     observacoes.reset_index()
-    observacoes.index = df_observacoes[df_observacoes.columns[0]]
+    observacoes.index = pd.to_datetime(df_observacoes_soma[NOME_COLUNA_INDEX])
 
-    predicoes = pd.Series(df_predicoes[df_predicoes.columns[1]].values)
+    predicoes = pd.Series(df_predicoes_soma[NOME_COLUNA_VALOR].values)
     predicoes.reset_index()
-    predicoes.index = df_predicoes[df_predicoes.columns[0]]
+    predicoes.index = pd.to_datetime(df_predicoes_soma[NOME_COLUNA_INDEX])
 
-    # Padronizando index dos Series como "yyy-MM-dd"
-    # observacoes.index = observacoes.index.to_period("D")
-    # predicoes.index = predicoes.index.to_period("D")
+    soma_observacoes = observacoes.iloc[(observacoes.size - predicoes.size):].sum()
+    soma_predicoes = predicoes.sum()
+
+    observacoes_ruptura_series = observacoes.iloc[(observacoes.size - predicoes.size):]
+    predicoes_ruptura_series = predicoes
 
     # Criando ndarray contendo apenas as observações reais para comparar com as predições
     y_test = observacoes.iloc[len(observacoes) - len(predicoes):len(observacoes)]
 
-    ax = observacoes.plot(label='Observado', marker="o")
-    predicoes.plot(ax=ax, label='Previsto', color="r", marker="o", alpha=.7)
+    ax = observacoes.plot(figsize=(15, 8), label='Observado', marker="o")
+    predicoes.index = observacoes.tail(predicoes.size).index
+    predicoes.plot(figsize=(15, 8), ax=ax, label='Previsto', color="r", marker="o", alpha=.7)
+    ax.set_xlabel("")
 
-    plt.savefig(PATH_METRICAS + '/' + nome_serie_temporal + '.png')
+    plt.savefig(PATH_METRICAS + '/' + nome_modelo + '.png', bbox_inches='tight')
     plt.close()
 
-    explained_variance = metrics.explained_variance_score(y_test, predicoes.values)
     mean_absolute_error = metrics.mean_absolute_error(y_test, predicoes.values)
     mse = metrics.mean_squared_error(y_test, predicoes.values)
-    mean_squared_log_error = metrics.mean_squared_log_error(y_test, predicoes.values)
     r2 = metrics.r2_score(y_test, predicoes.values)
 
-    # print('explained_variance: ', round(explained_variance, 4))
-    # print('mean_squared_log_error: ', round(mean_squared_log_error, 4))
+    soma_previsoes_abaixo = 0
+
+    for item_observacoes, item_predicoes in zip(observacoes_ruptura_series, predicoes_ruptura_series):
+        if item_predicoes < item_observacoes:
+            soma_previsoes_abaixo += 1
+
+    excesso = (soma_predicoes - soma_observacoes) / soma_observacoes
+    ruptura = soma_previsoes_abaixo / predicoes.size
 
     return {
-        "imagem": arquivo_para_base64(PATH_METRICAS + '/' + nome_serie_temporal + '.png'),
-        "metricas": [
-            {
-                "metrica": "MSE",
-                "valor": round(mse, 4)
-            },
-            {
-                "metrica": "RMSE",
-                "valor": round(np.sqrt(mse), 4)
-            },
-            {
-                "metrica": "MAE",
-                "valor": round(mean_absolute_error, 4)
-            },
-            {
-                "metrica": "R2",
-                "valor": round(r2, 4)
-            }
-        ]
-    }
+            "imagem": arquivo_para_base64(PATH_METRICAS + '/' + nome_modelo + '.png'),
+            "metricas": [
+                {"metrica": "MSE", "valor": str(round(mse, 4))},
+                {"metrica": "RMSE", "valor": str(round(np.sqrt(mse), 4))},
+                {"metrica": "MAE", "valor": str(round(mean_absolute_error, 4))},
+                {"metrica": "R2", "valor": str(round(r2, 4))},
+                {"metrica": "EXCESSO", "valor": str(round(excesso * 100, 3)) + "%"},
+                {"metrica": "RUPTURA", "valor": str(round(ruptura * 100, 3)) + "%"}
+            ]
+        }
 
 
 """
-    Se o filtro for "modelo" pega todos os .csv que tem o modelo igual ao modelo solicitado e soma a coluna "valor".
-    Se o filtro for "categoria" pega todos os .csv, verifica quais tem a categoria desejada e soma a coluna "valor".
-    Se o filtro for "item" pega todos os .csv, verifica quais tem o item desejado e soma a coluna "valor".
+    modelo é sempre diferente de None
 """
 
 
-def gerar_imagem_dados_observado_e_predicoes(tipo_filtro, valor_filtro):
-    limpar_diretorio(PATH_METRICAS_FILTRADAS)
-    bases = []
-    bases_filtro = []
+def gerar_imagem_dados_observado_e_predicoes(modelo, categoria, item):
 
-    for arquivo in [f for f in listdir(PATH_METRICAS) if isfile(join(PATH_METRICAS, f))]:
-        if ".png" not in arquivo:
-            nome = arquivo.split("-")
+    df_observacoes = _buscar_dataframe_dados_reais()
 
-            if not any(dictionary['id'] == nome[0] for dictionary in bases):
-                bases.append(
-                    {
-                        "id": nome[0],
-                        "modelo": arquivo[arquivo.find("(") + 1:arquivo.find(")")],
-                        "dadosReais": pd.read_csv(PATH_METRICAS + "/" + arquivo.split("@")[0] + "@dadosReais.csv"),
-                        "predicoes": pd.read_csv(PATH_METRICAS + "/" + arquivo.split("@")[0] + "@predicoes.csv")
-                    }
-                )
+    # Predicoes apenas do modelo selecionado
+    df_predicao = _buscar_dataframe_predicao(modelo)
 
-    if tipo_filtro == "modelo":
-
-        for base in bases:
-            if base["modelo"] == valor_filtro:
-                bases_filtro.append(base)
-
-    elif tipo_filtro == "categoria":
-
-        for base in bases:
-            if valor_filtro in base["dadosReais"][tipo_filtro].unique():
-                bases_filtro.append({
-                    "dadosReais": base["dadosReais"][base["dadosReais"][tipo_filtro] == valor_filtro],
-                    "predicoes": base["predicoes"][base["predicoes"][tipo_filtro] == valor_filtro]
-                })
-
-    else:
-        for base in bases:
-            if valor_filtro in base["dadosReais"][tipo_filtro].unique():
-                bases_filtro.append({
-                    "dadosReais": base["dadosReais"][base["dadosReais"][tipo_filtro] == valor_filtro],
-                    "predicoes": base["predicoes"][base["predicoes"][tipo_filtro] == valor_filtro]
-                })
-
-    # Iniciando variavel que receberá a soma
-    soma_observacoes = np.zeros(bases_filtro[0]["dadosReais"]["valor"].shape)
-    soma_predicoes = np.zeros(bases_filtro[0]["predicoes"]["valor"].shape)
-
-    # Realizando a soma
-    for base_modelo in bases_filtro:
-        soma_observacoes = base_modelo["dadosReais"]["valor"].fillna(0) + soma_observacoes
-        soma_predicoes = base_modelo["predicoes"]["valor"].fillna(0) + soma_predicoes
+    # Filtra "categoria" e "item" apenas no csv do "modelo" escolhido, e soma todas as séries desse modelo
+    df_observacoes = _filtrar_linhas_dataframe_por_categoria_e_item(df_observacoes, categoria, item)
+    df_predicao = _filtrar_linhas_dataframe_por_categoria_e_item(df_predicao, categoria, item)
 
     # Configurando pd.Series
-    observacoes = pd.Series(soma_observacoes)
+    observacoes = df_observacoes[NOME_COLUNA_VALOR]
     observacoes.reset_index()
-    observacoes.index = list(range(0, len(observacoes.index)))
+    observacoes.index = pd.to_datetime(df_observacoes[NOME_COLUNA_INDEX])
 
-    predicoes = pd.Series(soma_predicoes)
+    predicoes = df_predicao[NOME_COLUNA_VALOR]
     predicoes.reset_index()
-    predicoes.index = list(range(len(observacoes.index) - len(predicoes.index), len(observacoes.index)))
+    predicoes.index = pd.to_datetime(df_predicao[NOME_COLUNA_INDEX])
 
     # Gerando gráfico
-    ax = observacoes.plot(label='Observado', marker="o")
-    predicoes.plot(ax=ax, label='Previsto', color="r", marker="o", alpha=.7)
+    ax = observacoes.plot(figsize=(15, 8), label='Observado', marker="o")
+    predicoes.plot(figsize=(15, 8), ax=ax, label='Previsto', color="r", marker="o", alpha=.7)
+    ax.set_xlabel("")
 
     # Gerando imagem
-    plt.savefig(PATH_METRICAS_FILTRADAS + '/result.png')
+    plt.savefig(PATH_METRICAS_FILTRADAS + '/result_' + modelo + '.png', bbox_inches='tight')
     plt.close()
 
-    return arquivo_para_base64(PATH_METRICAS_FILTRADAS + '/result.png')
+    return arquivo_para_base64(PATH_METRICAS_FILTRADAS + '/result_' + modelo + '.png')
+
+
+def _somar_dataframes(nome_coluna_index, nome_coluna_soma, array_dataframe):
+    df_soma = pd.DataFrame()
+    df_soma[nome_coluna_index] = array_dataframe[0][nome_coluna_index].unique()
+    df_soma[nome_coluna_soma] = 0
+
+    for df in array_dataframe:
+        df = df.reset_index()
+        df_soma[nome_coluna_soma] = df[nome_coluna_soma].fillna(0) + df_soma[nome_coluna_soma]
+
+    return df_soma
+
+
+def _filtrar_linhas_dataframe_por_categoria_e_item(df, categoria, item):
+
+    if categoria is None:
+        quantidade_series = df.shape[0] / df[NOME_COLUNA_INDEX].unique().size
+        array_df = np.array_split(df, quantidade_series)
+        df_soma = _somar_dataframes(NOME_COLUNA_INDEX, NOME_COLUNA_VALOR, array_df)
+        result = df_soma
+    else:
+
+        if item is not None:
+            # Como filtro por uma categoria e um item, acaba resultando em apenas uma serie temporal de um item
+            result = df[(df[NOME_COLUNA_CATEGORIA] == categoria) & (df[NOME_COLUNA_ITEM] == item)]
+        else:
+            # Soma todas as linhas da categoria selecionada pra ficar so uma serie
+            df_filtrado = df[(df[NOME_COLUNA_CATEGORIA] == categoria)]
+
+            quantidade_series = df_filtrado.shape[0] / df_filtrado[NOME_COLUNA_INDEX].unique().size
+            array_df = np.array_split(df_filtrado, quantidade_series)
+
+            df_soma = _somar_dataframes(NOME_COLUNA_INDEX, NOME_COLUNA_VALOR, array_df)
+            result = df_soma
+
+    return result
+
+
+def _buscar_dataframe_dados_reais():
+    for arquivo in [f for f in listdir(PATH_METRICAS) if isfile(join(PATH_METRICAS, f))]:
+        if ".png" not in arquivo and "@dadosReais" in arquivo:
+            return pd.read_csv(PATH_METRICAS + "/" + arquivo)
+
+    return pd.DataFrame()
+
+
+def _buscar_dataframe_predicao(modelo):
+    for arquivo in [f for f in listdir(PATH_METRICAS) if isfile(join(PATH_METRICAS, f))]:
+        if ".png" not in arquivo and "@predicoes" in arquivo and modelo in arquivo:
+            return pd.read_csv(PATH_METRICAS + "/" + arquivo)
+
+    return pd.DataFrame()
+
+
+def _buscar_lista_dataframes_predicao():
+    result = []
+
+    for arquivo in [f for f in listdir(PATH_METRICAS) if isfile(join(PATH_METRICAS, f))]:
+        if ".png" not in arquivo and "@predicoes" in arquivo:
+            result.append(pd.read_csv(PATH_METRICAS + "/" + arquivo))
+
+    return result
