@@ -36,57 +36,29 @@ def gerar_metricas_e_plot_predicoes(nome_modelo, df_observacoes, df_predicoes):
 
     predicoes = pd.Series(df_predicoes_soma[NOME_COLUNA_VALOR].values)
     predicoes.reset_index()
-    predicoes.index = pd.to_datetime(df_predicoes_soma[NOME_COLUNA_INDEX])
-
-    soma_observacoes = observacoes.iloc[(observacoes.size - predicoes.size):].sum()
-    soma_predicoes = predicoes.sum()
-
-    observacoes_ruptura_series = observacoes.iloc[(observacoes.size - predicoes.size):]
-    predicoes_ruptura_series = predicoes
-
-    # Criando ndarray contendo apenas as observações reais para comparar com as predições
-    y_test = observacoes.iloc[len(observacoes) - len(predicoes):len(observacoes)]
+    # predicoes.index = pd.to_datetime(df_predicoes_soma[NOME_COLUNA_INDEX])
+    predicoes.index = observacoes.tail(predicoes.size).index
 
     ax = observacoes.plot(figsize=(15, 8), label='Observado', marker="o")
-    predicoes.index = observacoes.tail(predicoes.size).index
     predicoes.plot(figsize=(15, 8), ax=ax, label='Previsto', color="r", marker="o", alpha=.7)
     ax.set_xlabel("")
 
     plt.savefig(PATH_METRICAS + '/' + nome_modelo + '.png', bbox_inches='tight')
     plt.close()
 
-    mean_absolute_error = metrics.mean_absolute_error(y_test, predicoes.values)
-    mse = metrics.mean_squared_error(y_test, predicoes.values)
-    r2 = metrics.r2_score(y_test, predicoes.values)
-
-    soma_previsoes_abaixo = 0
-
-    for item_observacoes, item_predicoes in zip(observacoes_ruptura_series, predicoes_ruptura_series):
-        if item_predicoes < item_observacoes:
-            soma_previsoes_abaixo += 1
-
-    excesso = (soma_predicoes - soma_observacoes) / soma_observacoes
-    ruptura = soma_previsoes_abaixo / predicoes.size
-
     return {
-            "imagem": arquivo_para_base64(PATH_METRICAS + '/' + nome_modelo + '.png'),
-            "metricas": [
-                {"metrica": "MSE", "valor": str(round(mse, 4))},
-                {"metrica": "RMSE", "valor": str(round(np.sqrt(mse), 4))},
-                {"metrica": "MAE", "valor": str(round(mean_absolute_error, 4))},
-                {"metrica": "R2", "valor": str(round(r2, 4))},
-                {"metrica": "EXCESSO", "valor": str(round(excesso * 100, 3)) + "%"},
-                {"metrica": "RUPTURA", "valor": str(round(ruptura * 100, 3)) + "%"}
-            ]
-        }
+        "imagem": arquivo_para_base64(PATH_METRICAS + '/' + nome_modelo + '.png'),
+        "metricas": _gerar_metricas(observacoes, predicoes)
+    }
 
 
 """
+    Filtra os dados observados e as predições de acordo com modelo, categoria e item
     modelo é sempre diferente de None
 """
 
 
-def gerar_imagem_dados_observado_e_predicoes(modelo, categoria, item):
+def filtra_metricas_e_plot_predicoes(modelo, categoria, item):
 
     df_observacoes = _buscar_dataframe_dados_reais()
 
@@ -106,16 +78,57 @@ def gerar_imagem_dados_observado_e_predicoes(modelo, categoria, item):
     predicoes.reset_index()
     predicoes.index = pd.to_datetime(df_predicao[NOME_COLUNA_INDEX])
 
+    label_metricas = ""
+
+    for metrica in _gerar_metricas(observacoes, predicoes):
+        label_metricas = label_metricas + metrica["metrica"] + ": " + metrica["valor"] + "\n"
+
     # Gerando gráfico
-    ax = observacoes.plot(figsize=(15, 8), label='Observado', marker="o")
-    predicoes.plot(figsize=(15, 8), ax=ax, label='Previsto', color="r", marker="o", alpha=.7)
+    ax = observacoes.plot(figsize=(15, 8), marker="o", label='')
+    predicoes.plot(figsize=(15, 8), ax=ax, color="r", marker="o", alpha=.7, label=label_metricas)
     ax.set_xlabel("")
+
+    if categoria is not None:
+        plt.legend(fontsize='14', framealpha=.6)
 
     # Gerando imagem
     plt.savefig(PATH_METRICAS_FILTRADAS + '/result_' + modelo + '.png', bbox_inches='tight')
     plt.close()
 
     return arquivo_para_base64(PATH_METRICAS_FILTRADAS + '/result_' + modelo + '.png')
+
+
+def _gerar_metricas(observacoes, predicoes):
+    soma_observacoes = observacoes.iloc[(observacoes.size - predicoes.size):].sum()
+    soma_predicoes = predicoes.sum()
+
+    observacoes_ruptura_series = observacoes.iloc[(observacoes.size - predicoes.size):]
+    predicoes_ruptura_series = predicoes
+
+    # Criando ndarray contendo apenas as observações reais para comparar com as predições
+    y_test = observacoes.iloc[len(observacoes) - len(predicoes):len(observacoes)]
+
+    mean_absolute_error = metrics.mean_absolute_error(y_test, predicoes.values)
+    mse = metrics.mean_squared_error(y_test, predicoes.values)
+    r2 = metrics.r2_score(y_test, predicoes.values)
+
+    soma_previsoes_abaixo = 0
+
+    for item_observacoes, item_predicoes in zip(observacoes_ruptura_series, predicoes_ruptura_series):
+        if item_predicoes < item_observacoes:
+            soma_previsoes_abaixo += 1
+
+    excesso = (soma_predicoes - soma_observacoes) / soma_observacoes
+    ruptura = soma_previsoes_abaixo / predicoes.size
+
+    return [
+        {"metrica": "MSE", "valor": str(round(mse, 4))},
+        {"metrica": "RMSE", "valor": str(round(np.sqrt(mse), 4))},
+        {"metrica": "MAE", "valor": str(round(mean_absolute_error, 4))},
+        {"metrica": "R2", "valor": str(round(r2, 4))},
+        {"metrica": "EXCESSO", "valor": str(round(excesso * 100, 3)) + "%"},
+        {"metrica": "RUPTURA", "valor": str(round(ruptura * 100, 3)) + "%"}
+    ]
 
 
 def _somar_dataframes(nome_coluna_index, nome_coluna_soma, array_dataframe):

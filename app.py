@@ -8,7 +8,7 @@ from flask_cors import CORS
 from constants import PATH_SERIES_TEMPORAIS_SINTETICAS, PATH_METRICAS, PATH_METRICAS_FILTRADAS, NOME_COLUNA_CATEGORIA, \
     NOME_COLUNA_ITEM
 from gerador import gerar
-from metricas import gerar_metricas_e_plot_predicoes, gerar_imagem_dados_observado_e_predicoes
+from metricas import gerar_metricas_e_plot_predicoes, filtra_metricas_e_plot_predicoes
 from utils import arquivo_para_base64, lista_arquivos_do_diretorio, limpar_diretorio
 
 app = Flask(__name__)
@@ -174,7 +174,7 @@ def gerar_metricas():
 
         response_metricas.append(
             {
-                "nome": "predicoes" + " (" + item["nomeModelo"] + ")",
+                "nome": item["nomeModelo"],
                 "modelo": item["nomeModelo"],
                 "imagem": metricas_e_plot["imagem"],
                 "metricas": metricas_e_plot["metricas"]
@@ -228,10 +228,10 @@ def gerar_metricas_filtradas():
     else:
         return jsonify(
             {
-                "primeiroFiltroImagem": gerar_imagem_dados_observado_e_predicoes(
+                "primeiroFiltroImagem": filtra_metricas_e_plot_predicoes(
                     body["primeiroFiltro"]["modelo"], body["primeiroFiltro"][NOME_COLUNA_CATEGORIA], body["primeiroFiltro"][NOME_COLUNA_ITEM]
                 ),
-                "segundoFiltroImagem": gerar_imagem_dados_observado_e_predicoes(
+                "segundoFiltroImagem": filtra_metricas_e_plot_predicoes(
                     body["segundoFiltro"]["modelo"], body["segundoFiltro"][NOME_COLUNA_CATEGORIA], body["segundoFiltro"][NOME_COLUNA_ITEM]
                 )
             }
