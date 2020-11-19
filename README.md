@@ -101,7 +101,7 @@ Response
 #### /metricasFiltradas
 Returns the images of the filters sent by the body.
 
--POST
+- POST
 
 ```
 Body
